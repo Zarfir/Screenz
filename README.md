@@ -1,2 +1,2 @@
 # Screenz
-A command to facilitate and automate several monitors under i3wm.
+A command to facilitate and automate the management of multiple monitors under i3wm.
