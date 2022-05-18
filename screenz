@@ -1,6 +1,15 @@
 #!/bin/bash
 
-# { FONCTION TO CHECK THE INITIALIZATION } #
+# Set global path variable
+# Use XDG standard if in use
+if [[ -d "${XDG_CACHE_HOME}" ]]; then
+	cache="${XDG_CACHE_HOME}/screenz"
+else
+	cache="${HOME}/.cache/screenz"
+fi
+mkdir -p "${cache}"
+
+# { FUNCTION TO CHECK THE INITIALIZATION } #
 
 function check_init() {
     count=0
@@ -14,9 +23,9 @@ function check_init() {
           exit 84
       fi
       ((count++))
-    done < ~/.screenz
+    done < "${cache}/parameters"
     if [[ count -ne 2 ]]; then
-        rm -f ~/.screenz
+        rm -f "${cache}/parameters"
         echo "Error config file make a 'screenz -i'."
         exit 84
     fi
@@ -43,8 +52,8 @@ function help() {
     echo -e "\tOn error, screenz return 84."
     echo -e ""
     echo -e "\e[1mOTHER\e[0m"
-    echo -e "\tThis application generates a hidden file to run."
-    echo -e "\t\t'.screenz' is a hidden file that contains your parameters (do not modify)."
+    echo -e "\tThis application generates a parameter file to run."
+    echo -e "\t\tparameters are generated in the ${cache}/parameters file, it is recommended that you do not modify this file."
     echo -e ""
 }
 # {FUNCTION TO INITIALIZED THE PROGRAM (-I)} #
@@ -54,11 +63,11 @@ function init() {
         printf "Where is the position of your output relative to your computer? (left-of/right-of/above/below): "
         read answer
         if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
-            if [[ ! -e ~/.screenz ]]; then
-                echo -e "\n" >> ~/.screenz
+            if [[ ! -e "${cache}/parameters" ]]; then
+                echo -e "\n" >> "${cache}/parameters"
             fi
-            sed -i '2d' ~/.screenz
-            sed -i 1a"$answer" ~/.screenz
+            sed -i '2d' "${cache}/parameters"
+            sed -i 1a"$answer" "${cache}/parameters"
             break
         else
             echo "Invalid answer"
@@ -86,10 +95,10 @@ function auto () {
     count=0
     countw=0
     defaultscrenz="-1"
-    rm -f ~/.temp
+    rm -f /tmp/screenz-tmp
     while [[ 1 ]]; do
-        xrandr --current >> ~/.temp
-        if [[ -e ~/.screenz ]]; then
+        xrandr --current >> /tmp/screenz-tmp
+        if [[ -e "${cache}/parameters" ]]; then
             while read lines || [[ -n "$lines" ]]; do
                 if [[ $countw == 0 ]] && [[ -n $lines ]]; then
                     screenz=$lines
@@ -97,7 +106,7 @@ function auto () {
                     position=$lines
                 fi
                 ((countw++))
-            done < ~/.screenz
+            done < "${cache}/parameters"
             countw=0
             if [[ $count < 1 ]] && [[ $screenz != "" ]] && [[ $screenz != "\0" ]]; then
                 ((count++))
@@ -109,8 +118,8 @@ function auto () {
                 defaultscrenz=${tab[0]}
                 ((nb++))
             elif [[ ${tab[0]} != $defaultscrenz ]] && [[ ${tab[1]} == "connected" ]] && [[ ${tab[0]} != $screenz ]] && [[ $nb == 1 ]]; then
-                sed -i '1d' ~/.screenz
-                sed -i 1i"${tab[0]}" ~/.screenz
+                sed -i '1d' "${cache}/parameters"
+                sed -i 1i"${tab[0]}" "${cache}/parameters"
                 xrandr --output ${tab[0]} --auto --$position $defaultscrenz
                 if [[ ! -e /usr/bin/wzpaper ]]; then
                     killall wzpaper > /dev/null 2>&1
@@ -119,13 +128,13 @@ function auto () {
                 count=0
             elif [[ ${tab[0]} == "$screenz" ]] && [[ ${tab[1]} == "disconnected" ]]; then
                 xrandr --output ${tab[0]} --off
-                sed -i '1d' ~/.screenz
-                sed -i 1i'\ \' ~/.screenz
+                sed -i '1d' "${cache}/parameters"
+                sed -i 1i'\ \' "${cache}/parameters"
                 screenz="\0"
                 count=0
             fi
-        done < ~/.temp
-    rm -f ~/.temp
+        done < /tmp/screenz-tmp
+    rm -f /tmp/screenz-tmp
     sleep 1s
     done
 }
@@ -153,12 +162,12 @@ function choise() {
           echo -e "no output connected."
           exit 84
       fi
-    done < ~/.temp
+    done < /tmp/screenz-tmp
     if [[ $nb == 1 ]]; then
        echo -e "no output connected."
        exit 84 
     fi
-    rm -f ~/.temp
+    rm -f /tmp/screenz-tmp
     while [[ 1 ]]; do
         printf "\nwhich output do you want ? : "
         read answer
@@ -189,7 +198,7 @@ function choise() {
 }
 # {SWITCH CASE} #
 
-xrandr --current >> ~/.temp
+xrandr --current >> /tmp/screenz-tmp
 IFS=" "
 
 case $1 in
