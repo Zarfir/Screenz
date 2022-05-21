@@ -5,7 +5,7 @@
 if [[ -d "${XDG_CONFIG_HOME}" ]]; then
 	screenz-config="${XDG_CONFIG_HOME}/screenz"
 else
-	screenz-config="${HOME}/.cache/screenz"
+	screenz-config="${HOME}/.config/screenz"
 fi
 mkdir -p "${screenz-config}"
 
