@@ -2,12 +2,12 @@
 
 # Set global path variable
 # Use XDG standard if in use
-if [[ -d "${XDG_CACHE_HOME}" ]]; then
-	cache="${XDG_CACHE_HOME}/screenz"
+if [[ -d "${XDG_CONFIG_HOME}" ]]; then
+	screenz-config="${XDG_CONFIG_HOME}/screenz"
 else
-	cache="${HOME}/.cache/screenz"
+	screenz-config="${HOME}/.cache/screenz"
 fi
-mkdir -p "${cache}"
+mkdir -p "${screenz-config}"
 
 # { FUNCTION TO CHECK THE INITIALIZATION } #
 
@@ -23,9 +23,9 @@ function check_init() {
           exit 84
       fi
       ((count++))
-    done < "${cache}/parameters"
+    done < "${screenz-config}/parameters"
     if [[ count -ne 2 ]]; then
-        rm -f "${cache}/parameters"
+        rm -f "${screenz-config}/parameters"
         echo "Error config file make a 'screenz -i'."
         exit 84
     fi
@@ -53,7 +53,7 @@ function help() {
     echo -e ""
     echo -e "\e[1mOTHER\e[0m"
     echo -e "\tThis application generates a parameter file to run."
-    echo -e "\t\tparameters are generated in the ${cache}/parameters file, it is recommended that you do not modify this file."
+    echo -e "\t\tparameters are generated in the ${screenz-config}/parameters file, it is recommended that you do not modify this file."
     echo -e ""
 }
 # {FUNCTION TO INITIALIZED THE PROGRAM (-I)} #
@@ -63,11 +63,11 @@ function init() {
         printf "Where is the position of your output relative to your computer? (left-of/right-of/above/below): "
         read answer
         if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
-            if [[ ! -e "${cache}/parameters" ]]; then
-                echo -e "\n" >> "${cache}/parameters"
+            if [[ ! -e "${screenz-config}/parameters" ]]; then
+                echo -e "\n" >> "${screenz-config}/parameters"
             fi
-            sed -i '2d' "${cache}/parameters"
-            sed -i 1a"$answer" "${cache}/parameters"
+            sed -i '2d' "${screenz-config}/parameters"
+            sed -i 1a"$answer" "${screenz-config}/parameters"
             break
         else
             echo "Invalid answer"
@@ -78,7 +78,7 @@ function init() {
             printf "You want to add 'screenz' in your system command ? (y/N): "
             read answer
             if [[ $answer == "y" ]]; then
-                sudo cp -f screenz /usr/bin/
+                sudo cp -i screenz /usr/bin/
                 break
             elif [[ $answer == "N" ]]; then
                 break
@@ -98,7 +98,7 @@ function auto () {
     rm -f /tmp/screenz-tmp
     while [[ 1 ]]; do
         xrandr --current >> /tmp/screenz-tmp
-        if [[ -e "${cache}/parameters" ]]; then
+        if [[ -e "${screenz-config}/parameters" ]]; then
             while read lines || [[ -n "$lines" ]]; do
                 if [[ $countw == 0 ]] && [[ -n $lines ]]; then
                     screenz=$lines
@@ -106,7 +106,7 @@ function auto () {
                     position=$lines
                 fi
                 ((countw++))
-            done < "${cache}/parameters"
+            done < "${screenz-config}/parameters"
             countw=0
             if [[ $count < 1 ]] && [[ $screenz != "" ]] && [[ $screenz != "\0" ]]; then
                 ((count++))
@@ -118,8 +118,8 @@ function auto () {
                 defaultscrenz=${tab[0]}
                 ((nb++))
             elif [[ ${tab[0]} != $defaultscrenz ]] && [[ ${tab[1]} == "connected" ]] && [[ ${tab[0]} != $screenz ]] && [[ $nb == 1 ]]; then
-                sed -i '1d' "${cache}/parameters"
-                sed -i 1i"${tab[0]}" "${cache}/parameters"
+                sed -i '1d' "${screenz-config}/parameters"
+                sed -i 1i"${tab[0]}" "${screenz-config}/parameters"
                 xrandr --output ${tab[0]} --auto --$position $defaultscrenz
                 if [[ ! -e /usr/bin/wzpaper ]]; then
                     killall wzpaper > /dev/null 2>&1
@@ -128,8 +128,8 @@ function auto () {
                 count=0
             elif [[ ${tab[0]} == "$screenz" ]] && [[ ${tab[1]} == "disconnected" ]]; then
                 xrandr --output ${tab[0]} --off
-                sed -i '1d' "${cache}/parameters"
-                sed -i 1i'\ \' "${cache}/parameters"
+                sed -i '1d' "${screenz-config}/parameters"
+                sed -i 1i'\ \' "${screenz-config}/parameters"
                 screenz="\0"
                 count=0
             fi
@@ -228,5 +228,5 @@ case $1 in
           exit 84
           ;;
 esac
-unset cache
+unset screenz-config
 exit 0
