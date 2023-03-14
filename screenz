@@ -1,222 +1,260 @@
 #!/bin/bash
 
+# {VARIABLE ENVIRONEMENT}
+
+## {CONFIG PATH}
+
+CONFIG_DIR=~/.config/screenz
+CONFIG_FILE=$CONFIG_DIR/config.txt
+
+## {APPLICATION PATH}
+
+TEMP_DIR=/tmp
+TEMP_FILE=$TEMP_DIR/screenz-tmp.txt
+
+## {APPLICATION PATH}
+
+APPLICATION_PATH=/usr/bin
+SCREENZ_PATH=$APPLICATION_PATH/screenz
+XRANDR_PATH=$APPLICATION_PATH/xrandr
+WZPAPER_PATH=$APPLICATION_PATH/wzpaper
+
 # { FONCTION TO CHECK THE INITIALIZATION } #
 
 function check_init() {
-    count=0
-    if [[ ! -e /usr/bin/xrandr ]]; then
-        echo -e "You must install 'xrandr' to use this command."
-        exit 84
-    fi
-    while read lines || [[ -n "$lines" ]]; do
-      if [[ $count == 1 ]] && [[ -z $lines ]]; then
-          echo "the position of your production in relation to your computer is not notified, make a 'screenz -i' to notify it"
-          exit 84
-      fi
-      ((count++))
-    done < ~/.screenz
-    if [[ count -ne 2 ]]; then
-        rm -f ~/.screenz
-        echo "Error config file make a 'screenz -i'."
-        exit 84
-    fi
+
+nb_line=0
+
+if [[ ! -e $XRANDR_PATH ]]; then
+  echo -e "You must install 'xrandr' to use this command."
+  exit 84
+fi
+if [[ ! -d $CONFIG_DIR ]] || [[ ! -e $CONFIG_FILE ]]; then
+  echo "Error config file make a 'screenz -i'."
+  exit 84
+fi
+if [[ ! -e $CONFIG_FILE ]]; then
+  echo -e "\n" >> $CONFIG_FILE
+fi
+while read lines || [[ -n "$lines" ]]; do
+if [[ $nb_line == 1 ]] && [[ -z $lines ]]; then
+    echo "the position of your production in relation to your computer is not notified, make a 'screenz -i' to notify it"
+    exit 84
+fi
+((nb_line++))
+done < $CONFIG_FILE
+if [[ nb_line -ne 2 ]]; then
+  rm -f $CONFIG_FILE
+  echo "Error config file make a 'screenz -i'."
+  exit 84
+fi
+xrandr --current >> $TEMP_FILE
 }
+
 # {FUNCTION FOR PRINT THE INFO (-H)} #
 
 function help() {
-    echo -e "\n\e[1mNAME\e[0m"
-    echo -e "\tscreenz - set the orientation or output to configuring multiple monitors"
-    echo -e ""
-    echo -e "\e[1mSYNOPSIS\e[0m"
-    echo -e "\tscreenz [OPTIONS]"
-    echo -e ""
-    echo -e "\e[1mDESCRIPTION\e[0m"
-    echo -e ""
-    echo -e "\e[1mOPTIONS\e[0m"
-    echo -e "\t-h\tPrint the different information of this programme."
-    echo -e "\t-i\tInitialize information to set the program."
-    echo -e "\t-p\tAutomatic connection if there is an output."
-    echo -e "\t-c\tChoose the output you want."
-    echo -e ""
-    echo -e "\e[1mRETURN VALUE\e[0m"
-    echo -e "\tOn success, screenz return 0."
-    echo -e "\tOn error, screenz return 84."
-    echo -e ""
-    echo -e "\e[1mOTHER\e[0m"
-    echo -e "\tThis application generates a hidden file to run."
-    echo -e "\t\t'.screenz' is a hidden file that contains your parameters (do not modify)."
-    echo -e ""
+echo -e "\n\e[1mNAME\e[0m"
+echo -e "\tscreenz - set the orientation or output to configuring multiple monitors"
+echo -e ""
+echo -e "\e[1mSYNOPSIS\e[0m"
+echo -e "\tscreenz [OPTIONS]"
+echo -e ""
+echo -e "\e[1mDESCRIPTION\e[0m"
+echo -e ""
+echo -e "\e[1mOPTIONS\e[0m"
+echo -e "\t-h\tPrint the different information of this programme."
+echo -e "\t-i\tInitialize information to set the program."
+echo -e "\t-p\tAutomatic connection if there is an output."
+echo -e "\t-c\tChoose the output you want."
+echo -e ""
+echo -e "\e[1mRETURN VALUE\e[0m"
+echo -e "\tOn success, screenz return 0."
+echo -e "\tOn error, screenz return 84."
+echo -e ""
+echo -e "\e[1mOTHER\e[0m"
+echo -e "\tThis application generates a hidden directory nammed 'screenz/' in your '.config/' directory wich contains the parameters files and in the '/tmp/' directory for the script to work properly."
+echo -e "\t\t'screenz-tmp.txt' is a hidden file that contains information temporaly (do not modify)."
+echo -e "\t\t'config.txt' is a hidden file that contains your parameters (do not modify)."
+echo -e ""
 }
+
 # {FUNCTION TO INITIALIZED THE PROGRAM (-I)} #
 
 function init() {
-    while [[ 1 ]]; do
-        printf "Where is the position of your output relative to your computer? (left-of/right-of/above/below): "
-        read answer
-        if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
-            if [[ ! -e ~/.screenz ]]; then
-                echo -e "\n" >> ~/.screenz
-            fi
-            sed -i '2d' ~/.screenz
-            sed -i 1a"$answer" ~/.screenz
-            break
-        else
-            echo "Invalid answer"
-        fi
-    done
-    if [[ ! -e /usr/bin/screenz ]]; then
-        while [[ 1 ]]; do
-            printf "You want to add 'screenz' in your system command ? (y/N): "
-            read answer
-            if [[ $answer == "y" ]]; then
-                sudo cp -f screenz /usr/bin/
-                break
-            elif [[ $answer == "N" ]]; then
-                break
-            else
-                echo "Invalid answer"
-            fi
-        done
-    fi
+while [[ 1 ]]; do
+  printf "Where is the position of your output relative to your computer? (left-of/right-of/above/below): "
+  read answer
+  if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
+      if [[ ! -d $CONFIG_DIR ]]; then
+          mkdir $CONFIG_DIR
+      fi
+      if [[ ! -e $CONFIG_FILE ]]; then
+          echo -e "\n" >> $CONFIG_FILE
+      fi
+      sed -i '2d' $CONFIG_FILE
+      sed -i 1a"$answer" $CONFIG_FILE
+      break
+  else
+      echo "Invalid answer"
+  fi
+done
+if [[ ! -e $SCREENZ_PATH ]]; then
+  while [[ 1 ]]; do
+      printf "You want to add 'screenz' in your system command ? (y/N): "
+      read answer
+      if [[ $answer == "y" ]]; then
+          sudo cp -f screenz $APPLICATION_PATH
+          break
+      elif [[ $answer == "N" ]]; then
+          break
+      else
+          echo "Invalid answer"
+      fi
+  done
+fi
 }
+
 # {FUNCTION FOR AUTOMATIC CONNECTION (-P)} #
 
 function auto () {
-    nb=0
-    count=0
-    countw=0
-    defaultscrenz="-1"
-    rm -f ~/.temp
-    while [[ 1 ]]; do
-        xrandr --current >> ~/.temp
-        if [[ -e ~/.screenz ]]; then
-            while read lines || [[ -n "$lines" ]]; do
-                if [[ $countw == 0 ]] && [[ -n $lines ]]; then
-                    screenz=$lines
-                elif [[ $countw == 1 ]] && [[ -n $lines ]]; then
-                    position=$lines
-                fi
-                ((countw++))
-            done < ~/.screenz
-            countw=0
-            if [[ $count < 1 ]] && [[ $screenz != "" ]] && [[ $screenz != "\0" ]]; then
-                ((count++))
-            fi
-        fi
-        while read lines || [[ -n "$lines" ]]; do
-            tab=($lines)
-            if [[ ${tab[1]} == "connected" ]] && [[ $nb == 0 ]]; then
-                defaultscrenz=${tab[0]}
-                ((nb++))
-            elif [[ ${tab[0]} != $defaultscrenz ]] && [[ ${tab[1]} == "connected" ]] && [[ ${tab[0]} != $screenz ]] && [[ $nb == 1 ]]; then
-                sed -i '1d' ~/.screenz
-                sed -i 1i"${tab[0]}" ~/.screenz
-                xrandr --output ${tab[0]} --auto --$position $defaultscrenz
-                if [[ ! -e /usr/bin/wzpaper ]]; then
-                    killall wzpaper > /dev/null 2>&1
-                    wzpaper -p 0.25
-                fi
-                count=0
-            elif [[ ${tab[0]} == "$screenz" ]] && [[ ${tab[1]} == "disconnected" ]]; then
-                xrandr --output ${tab[0]} --off
-                sed -i '1d' ~/.screenz
-                sed -i 1i'\ \' ~/.screenz
-                screenz="\0"
-                count=0
-            fi
-        done < ~/.temp
-    rm -f ~/.temp
-    sleep 1s
-    done
+
+nb_output=0
+nb_line=0
+main_screen="\0"
+
+# variable get in CONFIG_FILE
+last_output="\0"
+position="\0"
+
+rm -f $TEMP_FILE
+while [[ 1 ]]; do
+  xrandr --current >> $TEMP_FILE
+  if [[ -e $CONFIG_FILE ]]; then
+      while read lines || [[ -n "$lines" ]]; do
+          if [[ $nb_line == 0 ]] && [[ -n $lines ]]; then
+              last_output=$lines
+          elif [[ $nb_line == 1 ]] && [[ -n $lines ]]; then
+              position=$lines
+          fi
+          ((nb_line++))
+      done < $CONFIG_FILE
+      nb_line=0
+  else
+      rm -f $CONFIG_FILE
+      echo "Error config file make a 'screenz -i'."
+      exit 84
+  fi
+  while read lines || [[ -n "$lines" ]]; do
+      line=($lines)
+      if [[ ${line[1]} == "connected" ]] && [[ $nb_output == 0 ]]; then
+          main_screen=${line[0]}
+          ((nb_output++))
+      elif [[ ${line[0]} != $main_screen ]] && [[ ${line[1]} == "connected" ]] && [[ ${line[0]} != $last_output ]] && [[ $nb_output == 1 ]]; then
+          sed -i '1d' $CONFIG_FILE
+          sed -i 1i"${line[0]}" $CONFIG_FILE
+          xrandr --output ${line[0]} --auto --$position $main_screen
+          if [[ ! -e $WZPAPER_PATH ]]; then
+              killall wzpaper > /dev/null 2>&1
+              wzpaper -p 0.25
+          fi
+      elif [[ ${line[0]} == "$last_output" ]] && [[ ${line[1]} == "disconnected" ]]; then
+          xrandr --output ${line[0]} --off
+          sed -i '1d' $CONFIG_FILE
+          sed -i 1i'\ \' $CONFIG_FILE
+          last_output="\0"
+      fi
+  done < $TEMP_FILE
+  rm -f $TEMP_FILE
+  sleep 1s
+done
 }
+
 # {FUNCTION FOR CHOICE YOUR SCREEN (-C)} #
 
 function choise() {
-    nb=0
-    count=0
-    defaultscrenz="-1"
-    while read lines || [[ -n "$lines" ]]; do
-      tab=($lines)
-      if [[ ${tab[1]} == "connected" ]] && [[ $nb == 0 ]]; then
-          defaultscrenz=${tab[0]}
-          ((nb++))
-      elif [[ ${tab[0]} != $defaultscrenz ]] && [[ ${tab[1]} == "connected" ]] && [[ $nb == 1 ]]; then
-          echo -e "connected output\n"
-          echo -e "\t${tab[0]}"
-          lib+=( ${tab[0]} )
-          ((nb++))
-      elif [[ ${tab[0]} != $defaultscrenz ]] && [[ ${tab[1]} == "connected" ]]; then
-          echo -e "\t${tab[0]}"
-          lib+=( ${tab[0]} )
-          ((nb++))
-      elif [[ ! -n "$lines" ]] && [[ $nb == 1 ]]; then
-          echo -e "no output connected."
-          exit 84
-      fi
-    done < ~/.temp
-    if [[ $nb == 1 ]]; then
-       echo -e "no output connected."
-       exit 84 
+
+nb_output=0
+count=0
+main_screen="\0"
+selected_output="\0"
+write_text=false
+
+rm -f $TEMP_FILE
+xrandr --current >> $TEMP_FILE
+while read lines || [[ -n "$lines" ]]; do
+line=($lines)
+if [[ ${line[1]} == "connected" ]] && [[ $nb_output == 0 ]]; then
+    echo -e "---[Output from the main screen]---\n"
+    main_screen=${line[0]}
+    echo -e "\t\t$main_screen\n"
+    ((nb_output++))
+elif [[ $main_screen != '\0' ]] && [[ ${line[0]} != $main_screen ]] && [[ ${line[1]} == "connected" ]]; then
+    if [[ $write_text == false ]]; then
+      echo -e "---------[External output]---------\n"
+      write_text=true
     fi
-    rm -f ~/.temp
-    while [[ 1 ]]; do
-        printf "\nwhich output do you want ? : "
-        read answer
-        for (( i = 0; i < $nb; i++ )); do
-            if [[ $answer == ${lib[i]} ]]; then
-                while [[ 1 ]]; do
-                    printf "what position relative to the main screen? (left-of/right-of/above/below): "
-                    read answer
-                    if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
-                        xrandr --output ${lib[i]} --auto --$answer $defaultscrenz
-                        echo -e "${lib[i]} is on the $answer side of your main screen"
-                        if [[ ! -e /usr/bin/wzpaper ]]; then
-                            killall wzpaper > /dev/null 2>&1
-                            wzpaper -p 0.25
-                        fi
-                        exit 0
-                    else
-                        echo "Invalid answer."
-                    fi
-                done
-            fi
-            ((count++))
-        done
-        if [[ $nb == $count ]]; then
-            echo "Invalid output."
-        fi
-    done
+    echo -e "\t\t${line[0]}\n"
+    selected_output=( ${line[0]} )
+    ((nb_output++))
+fi
+done < $TEMP_FILE
+if [[ $selected_output == '\0' ]]; then
+  echo -e "No external output."
+  exit 84 
+fi
+while [[ 1 ]]; do
+  printf "which output do you want ? : "
+  read answer
+      if [[ $answer == $selected_output ]]; then
+          while [[ 1 ]]; do
+              printf "what position relative to the main screen? (left-of/right-of/above/below): "
+              read answer
+              if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
+                  xrandr --output $selected_output --auto --$answer $main_screen
+                  echo -e "$selected_output is on the $answer side of your main screen"
+                  if [[ ! -e $WZPAPER_PATH ]]; then
+                      killall wzpaper > /dev/null 2>&1
+                      wzpaper -p 0.25
+                  fi
+                  exit 0
+              else
+                  echo "Invalid answer."
+              fi
+          done
+      fi
+      ((count++))
+  if [[ $nb_output == $count ]]; then
+      echo "Invalid output."
+  fi
+done
 }
+
 # {SWITCH CASE} #
 
-xrandr --current >> ~/.temp
-IFS=" "
-
 case $1 in
-      "-h" | "--help")
-          help
-          exit 0
-          ;;
-      "-i")
-          init
-          exit 0
-          ;;
-      "-p")
-          check_init
-          auto &
-          ;;
-      "-c")
-          check_init
-          choise
-          ;;
-      *)
-          if [[ -z $1 ]]; then
-              echo "screenz: invalid argument."
-          else
-              echo "screenz: invalid option - '$1'"
-          fi
-          echo "Try 'screenz -h' for more information."
-          exit 84
-          ;;
+"-h" | "--help")
+    help
+    ;;
+"-i")
+    init
+    ;;
+"-p")
+    check_init
+    auto &
+    ;;
+"-c")
+    check_init
+    choise
+    ;;
+*)
+    if [[ -z $1 ]]; then
+        echo "screenz: invalid argument."
+    else
+        echo "screenz: invalid option - '$1'"
+    fi
+    echo "Try 'screenz -h' for more information."
+    exit 84
+    ;;
 esac
 exit 0
