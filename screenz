@@ -154,7 +154,7 @@ while [[ 1 ]]; do
           sed -i '1d' $CONFIG_FILE
           sed -i 1i"${line[0]}" $CONFIG_FILE
           xrandr --output ${line[0]} --auto --$position $main_screen
-          if [[ ! -e $WZPAPER_PATH ]]; then
+          if [[ -e $WZPAPER_PATH ]]; then
               killall wzpaper > /dev/null 2>&1
               wzpaper -p 0.25
           fi
@@ -213,7 +213,7 @@ while [[ 1 ]]; do
               if [[ $answer == "left-of" ]] || [[ $answer == "right-of" ]] || [[ $answer == "above" ]] || [[ $answer == "below" ]]; then
                   xrandr --output $selected_output --auto --$answer $main_screen
                   echo -e "$selected_output is on the $answer side of your main screen"
-                  if [[ ! -e $WZPAPER_PATH ]]; then
+                  if [[ -e $WZPAPER_PATH ]]; then
                       killall wzpaper > /dev/null 2>&1
                       wzpaper -p 0.25
                   fi
